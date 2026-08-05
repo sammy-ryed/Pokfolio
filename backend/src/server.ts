@@ -1,26 +1,16 @@
-import Fastify from "fastify";
-import cors from "@fastify/cors";
-import "dotenv/config";
+import { buildApp } from './app.js';
+import { env } from './config/env.js';
 
-import githubRoutes from "./routes/github.js";
-import pinterestRoutes from "./routes/pinterest.js";
-import cardRoutes from "./routes/card.js";
+const app = buildApp();
 
-const app = Fastify({ logger: true });
+async function start() {
+  try {
+    await app.listen({ port: env.PORT, host: '0.0.0.0' });
+    console.log(`Server listening on port ${env.PORT}`);
+  } catch (err) {
+    app.log.error(err);
+    process.exit(1);
+  }
+}
 
-await app.register(cors, {
-  origin: process.env.FRONTEND_URL ?? "http://localhost:3000",
-});
-
-app.get("/health", async () => ({ status: "ok" }));
-
-await app.register(githubRoutes, { prefix: "/api/github" });
-await app.register(pinterestRoutes, { prefix: "/api/pinterest" });
-await app.register(cardRoutes, { prefix: "/api/card" });
-
-const port = Number(process.env.PORT ?? 4000);
-
-app.listen({ port, host: "0.0.0.0" }).catch((err) => {
-  app.log.error(err);
-  process.exit(1);
-});
+start();
